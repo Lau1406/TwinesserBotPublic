@@ -269,7 +269,7 @@ class TwitterBot:
                         break
 
         if len(stations_tuples) < 2:
-            return self.cant_find_route_return()  # need at least two stations
+            return self.cant_find_route_return(user=user)  # need at least two stations
         # remove false positives
         # n^2 running time to filter out wrong stations, jee. good that there are only 140 characters
         #   and (assumption) not that many stations
@@ -294,7 +294,7 @@ class TwitterBot:
         stations_tuples = temp_list
 
         if len(stations_tuples) < 2:
-            return self.cant_find_route_return()  # need at least two stations
+            return self.cant_find_route_return(user=user)  # need at least two stations
         smallest = 2 * TWITTER_CHAR_LIMIT  # need to find something that is smallest, start with big number
         middle = -1
         biggest = -1  # need to find something that is biggest, start with small number
@@ -320,7 +320,7 @@ class TwitterBot:
             if from_station != "" and to_station != "" and via_station != "":
                 break
         if from_station == "" or to_station == "":
-            return self.cant_find_route_return()
+            return self.cant_find_route_return(user=user)
 
         timezone_string = '+0100'
         if datetimeutil.is_dst('Europe/Amsterdam'):
@@ -339,7 +339,7 @@ class TwitterBot:
         trips = self.ns_get_route(from_station=from_station, via_station="&viaStation=" + via_station, to_station=to_station, timestamp=pref_time_str)
         amount = len(trips)
         if amount < 1:
-            return self.cant_find_route_return()
+            return self.cant_find_route_return(user=user)
 
         trip_parts = None
         for trip in trips:
@@ -357,12 +357,12 @@ class TwitterBot:
                 url = self.make_url_to_website(station_from=from_station, station_via=via_station
                                                , station_to=to_station, time_departure=pref_time_datetime)
                 if url == "error":
-                    return self.cant_find_route_return()
+                    return self.cant_find_route_return(user=user)
                 time_departure = stop_start.time.strftime("%H") + ":" + stop_start.time.strftime("%M")
                 return self.can_find_route_return(station_from=stop_start.name, station_to=stop_end.name,
                                                   departure_time=time_departure, departure_track=stop_start.platform,
                                                   user=user, url=url, recursive=True)
-        return self.cant_find_route_return()
+        return self.cant_find_route_return(user=user)
 
     '''
     method that calls the ns_api with the stations and returns a Trip object. If one of the stations is badly specified will return None
@@ -470,8 +470,8 @@ class TwitterBot:
     Method that returns a random answer selected from a list, this to make it look better
     '''
 
-    def cant_find_route_return(self) -> str:
-        return {
+    def cant_find_route_return(self, user: str) -> str:
+        return user + {
             0: "Not again, sorry, but I couldn't find a route :(",
             1: "I'm sorry, I couldn't find a route",
             2: "Failed to find a route",
@@ -489,7 +489,7 @@ class TwitterBot:
                               departure_track: "pref str but int also possible", user: str, url: str,
                               recursive) -> str:
         if station_from is None or station_to is None or departure_time is None or departure_track is None:
-            return self.cant_find_route_return()
+            return self.cant_find_route_return(user=user)
         # context = "@" + user + " Train from " + station_from + " to " + station_to + " from track " + departure_track + " at " + departure_time
         context = {
             0: "Train from " + station_from + " to " + station_to + " from track " + departure_track + " at " + departure_time,
@@ -519,7 +519,7 @@ class TwitterBot:
                                               user=user,
                                               url=url,
                                               recursive=False)  # prevent infinite loop
-        return self.cant_find_route_return()
+        return self.cant_find_route_return(user=user)
 
     def get_station_short_name(self, station_name: str):
         for station in self.stations:
