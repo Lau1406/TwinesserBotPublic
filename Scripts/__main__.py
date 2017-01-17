@@ -471,7 +471,7 @@ class TwitterBot:
     '''
 
     def cant_find_route_return(self, user: str) -> str:
-        return user + {
+        return user + " " + {
             0: "Not again, sorry, but I couldn't find a route :(",
             1: "I'm sorry, I couldn't find a route",
             2: "Failed to find a route",
